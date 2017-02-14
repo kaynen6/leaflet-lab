@@ -1,3 +1,14 @@
 /* Stylesheet by Kayne Neigherbauer, 2017 */
 
-#mapid { height: 500px;}
+#mapid { 
+    height: 500px;
+    width: 80%;
+    display: inline-block;
+}
+
+
+#panel {
+    width: 16%;
+    display: inline-block;
+    vertical-align: top;
+}
