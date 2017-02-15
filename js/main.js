@@ -46,29 +46,39 @@ function pointToLayer(feature, latlng){
     var attribute = "IN87_HUDMED"; 
     //grad the properties of the attribute
     var attValue = Number(feature.properties[attribute]);
+    //split up the string a bunch so i can make it readable and with proper 4 digit years.
     var splitStr = attribute.split("_");
     splitStr = splitStr[0].split("N");
-    
     year = splitStr[1];
+    //add century digits. 
     if (year > 80) {
         year = 19 + year;
     } 
     else {
         year = 20 + year;
     };
-    
     //define radius via func to calculate based on attribute data
     options.radius = calcPropRadius(attValue);
-    
+    //add commas and dollar $ign. 
     var newAttValue = "$" + addCommas(attValue);
-    
-    console.log(newAttValue);
+    //console.log(newAttValue);
     //create circleMarker
     var layer = L.circleMarker(latlng, options);
     //create popup content string
     var popupContent = "<p><b>City:</b> " + feature.properties.MSA_Codebook + "</p><p><b>" + "HUD Median Home Price in " + year + ":</b> " + newAttValue + "</p>";
-    //bind the popup content to the layer
-    layer.bindPopup(popupContent);
+    //bind the popup content to the layer and add an offset radius option
+    layer.bindPopup(popupContent, {
+        offset: new L.Point(0,-options.radius) 
+    });
+    //add mouseover popup functionality
+    layer.on({
+        mouseover: function(){
+            this.openPopup();
+        },
+        mouseout: function(){
+            this.closePopup();
+        }
+    });
     
     return layer;
 };
@@ -84,7 +94,7 @@ function calcPropRadius(attValue) {
     return radius;
 };
 
-
+//add commas to values to display in dollar$.
 function addCommas(attValue) {
     return attValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };

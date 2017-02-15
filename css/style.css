@@ -12,3 +12,7 @@
     display: inline-block;
     vertical-align: top;
 }
+
+.leaflet-popup-content p {
+    margin: 0.02em 0;
+}
