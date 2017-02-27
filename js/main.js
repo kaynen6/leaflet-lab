@@ -57,10 +57,10 @@ function createPropSymbols(response, map, attributes){
 
 //initial symbolization when map loads for first time
 function pointToLayer(feature, latlng, attributes){
-    //create marker options    
+    //create marker options w/ defualt styling
     var options = {
         radius: 8,
-        fillColor: "#ff1900",
+        fillColor: "#91bfdb",
         color: "#000",
         weight: 0.5,
         opacity: 1,
@@ -125,35 +125,56 @@ function calcPropRadius(attValue) {
     return radius;
 };
 
+
+//function to calculate the mean for resymbolization
 function calcMean(map, attribute){
+    //array to hold value from each feature
     var yearValues = [];
+    //get each feature
     map.eachLayer(function(layer){
         if (layer.feature && layer.feature.properties[attribute]){
+            //shorthand copied from previous function
             var props = layer.feature.properties;
-            console.log(props[attribute]);
+            //checking my code
+            //console.log(props[attribute]);
+            //takes value for each feature at give year and pushes to array
             yearValues.push(props[attribute]);
-            console.log(yearValues);
+            //checking myself again
+            //console.log(yearValues);
         };
     });
+    //mean variable to return
     var yearMean = 0;
+    //total variable used for calculation
     var total = 0;
+    //loop for calculating, gets total number of values and sums them
     for (i = 0; i<yearValues.length;i++){
         total += yearValues[i];    
     };
+    //calc mean with total and length of array
     yearMean = total/yearValues.length;
-    console.log(yearMean);
+    //check yo-self before you wreck yo-self. 
+    //console.log(yearMean);
+    //return the yearMean to function
     return yearMean;
 };
 
+//update symbols functions call each time something is changed or clicked on the map.
 function updatePropSymbols(map, attribute,checked){
+    //get the mean value of that year by calcMean function
     var yearMean = calcMean(map, attribute);
+    //round the mean to clean it up
     yearMean = Math.round(yearMean);
+    //checking
     console.log(yearMean);
     console.log(checked);
+    //go through each feature's values for given year (attribute)
     map.eachLayer(function(layer){
         if (layer.feature && layer.feature.properties[attribute]){
             var props = layer.feature.properties;
+            //check the checkbox for resymbolization if checked, resybolize with these options
             if (checked){
+                //compare value for feature to the mean for that year, use options accordingly
                 if ((props[attribute]) < yearMean) {
                     //options for less than mean
                     var options = {
@@ -177,10 +198,11 @@ function updatePropSymbols(map, attribute,checked){
                     }
                 };
             }
+            //if not checked, be use regular symbolization
             else{
                 var options = {
                     radius: 8,
-                    fillColor: "#ff1900",
+                    fillColor: "#91bfdb",
                     color: "#000",
                     weight: 0.5,
                     opacity: 1,
@@ -189,6 +211,7 @@ function updatePropSymbols(map, attribute,checked){
             };
             //update each feature's radius based on new att values
             var radius = calcPropRadius(Number(props[attribute]));
+            //set styling and radius
             layer.setStyle(options);
             layer.setRadius(radius);
             
@@ -208,12 +231,13 @@ function updatePropSymbols(map, attribute,checked){
             //create popup content string
             var popupContent = "<p><b>City:</b> " + props.MSA_Codebook + "</p>";
             //update panel content as well
-            var panelContent = "<p><b>City:</b>" + props.MSA_Codebook + "</p>" + "<p>Median Home Price in " + year + ":</b> " + newAttValue + "</p>";
+            var panelContent = "<p><b>City:</b>" + props.MSA_Codebook + "</p>" + "<p>HUD Median Income in " + year + ":</b> " + newAttValue + "</p>";
 
             //bind the popup content to the layer and add an offset radius option
             layer.bindPopup(popupContent, {
                 offset: new L.Point(0,-radius), closeButton: false
             });
+            //mouseover and click listeners for popup/panel content set to ON
             layer.on({
                 mouseover: function(){
                     this.openPopup();
@@ -248,8 +272,10 @@ function createControls(response, map, attributes){
     $('#reverse').html('<img src="img/reverse.png">');
     $('#forward').html('<img src="img/forward.png">');
     //create check box for resymbolization
-    $('#panel').append('<label><input type="checkbox" id="cbox" value="resymbolize"><h7>Identify cities below/above years national average</h7></input></label><br>');
-    
+    $('#cboxpanel').append('<label><input type="checkbox" id="cbox" value="resymbolize"><h7>Identify cities below/above year&#39;s national average</h7></input></label><br>');
+    //by default hide the legend
+    $('#legendabove').hide();
+    $('#legendbelow').hide();
     //click listener for buttons
     $('.skip').click(function(){
         //sequence
@@ -286,10 +312,20 @@ function createControls(response, map, attributes){
         updatePropSymbols(map, attributes[index], $('#cbox').prop('checked'));
     });
     
-    
+    //listener for checkbox for resymbolization, update symbols when checked or unchecked
     $('#cbox').change(function(){
         var index = $('.range-slider').val();
         updatePropSymbols(map, attributes[index],this.checked);
+        
+        //show/hide the legend as needed
+        if (this.checked){
+            $('#legendabove').show();
+            $('#legendbelow').show();
+        }
+        else{
+            $('#legendabove').hide();
+            $('#legendbelow').hide();
+        };
     });    
     
 };
