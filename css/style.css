@@ -67,3 +67,8 @@ h7 {
     background-color: #7fbf7b;
     width: 45%;
 }
+
+#slider-labels{
+    align-items: left;
+    width: 70%;
+}

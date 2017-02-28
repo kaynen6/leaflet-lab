@@ -254,7 +254,11 @@ function updatePropSymbols(map, attribute,checked){
 };
 
 //create sequence controls 
-function createControls(response, map, attributes){
+function createControls(response, map, attributes){  
+    //create skip button
+    $('#bottompanel').append('<button class="skip" id="reverse">Reverse</button>');
+    //add label
+    $('#bottompanel').append('<label for:"range-slider">Year:</label>');
     //create range input slider element
     $('#bottompanel').append('<input class="range-slider" type="range">');
     //set slider attibutes
@@ -262,10 +266,9 @@ function createControls(response, map, attributes){
         max: Object.keys(response.features[0].properties).length-1,
         min: 1,
         value: 1,
-        step: 1
+        step: 1,
     });
     //add skip buttons
-    $('#bottompanel').append('<button class="skip" id="reverse">Reverse</button>');
     $('#bottompanel').append('<button class="skip" id="forward">Skip</button>');
     
     //replce button content with images of arrows
@@ -276,6 +279,9 @@ function createControls(response, map, attributes){
     //by default hide the legend
     $('#legendabove').hide();
     $('#legendbelow').hide();
+    //create the html inside for the legend, hidden first
+    $('#legendabove').html("<h7>Above Nationwide Mean</h7>");
+    $('#legendbelow').html("<h7>Below Nationwide Mean</h7>");
     //click listener for buttons
     $('.skip').click(function(){
         //sequence
