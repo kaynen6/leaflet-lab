@@ -130,9 +130,9 @@ function pointToLayer(feature, latlng, attributes){
     //create circleMarker
     var layer = L.circleMarker(latlng, options);
     //create popup content string
-    var popupContent = "<p><b>City:</b> " + feature.properties.MSA_Codebook + "</p>";
+    var popupContent = "<p><b> " + feature.properties.MSA_Codebook + "</b></p>";
     //add panel content variable 
-    var panelContent = "<p><b>City:</b>" + feature.properties.MSA_Codebook + "</p>" + "<p>Median HUD Household Income in " + year + ":</b> " + newAttValue + "</p>";
+    var panelContent = "<p><b>City:</b>" + feature.properties.MSA_Codebook + "</p>" + "<p>Median Income in " + year + ":</b> " + newAttValue + "</p>";
     //add text and year and value to panelcontent
     //bind the popup content to the layer and add an offset radius option
     layer.bindPopup(popupContent, {
@@ -263,7 +263,7 @@ function updatePropSymbols(map, attribute,checked){
             });
         };
     });
-    //update panel with yearly mean
+    //update panel with yearly median
     $('#year').html(currentYear);
     $('#median').html(addCommas(yearMedian));
 };
@@ -271,8 +271,8 @@ function updatePropSymbols(map, attribute,checked){
 //create sequence controls 
 function createControls(response, map, attributes){
     
-    //hide mean info by default
-    $('medianinfo').hide();
+    //hide median info by default
+    $('#medianinfo').hide();
     //create skip button
     $('#bottompanel').append('<button class="skip" id="reverse">Reverse</button>');
     //add label
