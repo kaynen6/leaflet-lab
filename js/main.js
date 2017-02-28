@@ -1,3 +1,5 @@
+var currentYear;
+
 //function to call once doc is loaded to create the basemap
 function createMap(){
     var mymap = L.map('mapid').setView([35, -110], 4);
@@ -16,7 +18,6 @@ function createMap(){
 function processData(data){
     //empty array to hold attribute data
     var attributes = [];
-    
     //properties of the first feature in the dataset
     var properties = data.features[0].properties;
     //push each attribute name into attributes array
@@ -55,6 +56,45 @@ function createPropSymbols(response, map, attributes){
     }).addTo(map);
 };    
 
+function addCommas(number){
+    var string = number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return string;
+};
+
+//function to calculate the median for resymbolization
+function calcMedian(map, attribute){
+    //array to hold value from each feature
+    var values = [];
+    //get each feature
+    map.eachLayer(function(layer){
+        if (layer.feature && layer.feature.properties[attribute]){
+            //shorthand copied from previous function
+            var props = layer.feature.properties;
+            //takes value for each feature at give year and pushes to array
+            values.push(props[attribute]);
+        };
+    });
+    //median variable to return
+    var median = 0;
+    //length variable used for calculation
+    var len = values.length;
+    //sort
+    values.sort();
+    //calc based on odd/even
+    if (len % 2 === 0){
+        //even
+        median = (values[len / 2-1] + values[len/2]) /2;
+    }
+    else {
+        //odd
+        median = values[(len -1) /2];
+    };
+    return median;
+};
+
+
+
+
 //initial symbolization when map loads for first time
 function pointToLayer(feature, latlng, attributes){
     //create marker options w/ defualt styling
@@ -66,7 +106,6 @@ function pointToLayer(feature, latlng, attributes){
         opacity: 1,
         fillOpacity: 0.3 //soften the opacity a little to see other points and map through point feature
     };
-    
     //define the attribute to grab //this is the year, must be changed or made dynamic
     var attribute = attributes[0]; 
     //grad the properties of the attribute
@@ -82,10 +121,12 @@ function pointToLayer(feature, latlng, attributes){
     else {
         year = 20 + year;
     };
+    //update current year
+    currentYear = year;    
     //define radius via func to calculate based on attribute data
     options.radius = calcPropRadius(attValue);
     //add commas and dollar $ign. 
-    var newAttValue = "$" + attValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    var newAttValue = "$" + addCommas(attValue);
     //create circleMarker
     var layer = L.circleMarker(latlng, options);
     //create popup content string
@@ -107,7 +148,7 @@ function pointToLayer(feature, latlng, attributes){
             this.closePopup();
         },
         click: function(){
-            $("#subpanel").html(panelContent);
+            $("#cityinfo").html(panelContent);
         }
     });
     return layer;
@@ -126,47 +167,15 @@ function calcPropRadius(attValue) {
 };
 
 
-//function to calculate the mean for resymbolization
-function calcMean(map, attribute){
-    //array to hold value from each feature
-    var yearValues = [];
-    //get each feature
-    map.eachLayer(function(layer){
-        if (layer.feature && layer.feature.properties[attribute]){
-            //shorthand copied from previous function
-            var props = layer.feature.properties;
-            //checking my code
-            //console.log(props[attribute]);
-            //takes value for each feature at give year and pushes to array
-            yearValues.push(props[attribute]);
-            //checking myself again
-            //console.log(yearValues);
-        };
-    });
-    //mean variable to return
-    var yearMean = 0;
-    //total variable used for calculation
-    var total = 0;
-    //loop for calculating, gets total number of values and sums them
-    for (i = 0; i<yearValues.length;i++){
-        total += yearValues[i];    
-    };
-    //calc mean with total and length of array
-    yearMean = total/yearValues.length;
-    //check yo-self before you wreck yo-self. 
-    //console.log(yearMean);
-    //return the yearMean to function
-    return yearMean;
-};
-
 //update symbols functions call each time something is changed or clicked on the map.
 function updatePropSymbols(map, attribute,checked){
-    //get the mean value of that year by calcMean function
-    var yearMean = calcMean(map, attribute);
-    //round the mean to clean it up
-    yearMean = Math.round(yearMean);
+    //get the median value of that year by calcMedian function
+    var yearMedian = calcMedian(map, attribute);
+    //round the median to clean it up
+    console.log(yearMedian)
+    yearMedian = Math.round(yearMedian);
     //checking
-    console.log(yearMean);
+    console.log(yearMedian);
     console.log(checked);
     //go through each feature's values for given year (attribute)
     map.eachLayer(function(layer){
@@ -174,9 +183,9 @@ function updatePropSymbols(map, attribute,checked){
             var props = layer.feature.properties;
             //check the checkbox for resymbolization if checked, resybolize with these options
             if (checked){
-                //compare value for feature to the mean for that year, use options accordingly
-                if ((props[attribute]) < yearMean) {
-                    //options for less than mean
+                //compare value for feature to the median for that year, use options accordingly
+                if ((props[attribute]) < yearMedian) {
+                    //options for less than median
                     var options = {
                         radius: 8,
                         fillColor: "#7fbf7b",
@@ -187,7 +196,7 @@ function updatePropSymbols(map, attribute,checked){
                     };
                 }
                 else {
-                    //options for greater than mean
+                    //options for greater than median (just treating median as greater)
                     var options = {
                         radius: 8,
                         fillColor: "#af8dc3",
@@ -214,7 +223,7 @@ function updatePropSymbols(map, attribute,checked){
             //set styling and radius
             layer.setStyle(options);
             layer.setRadius(radius);
-            
+            //format the string properly
             var splitStr = attribute.split("_");
             splitStr = splitStr[0].split("N");
             var year = splitStr[1];
@@ -225,10 +234,12 @@ function updatePropSymbols(map, attribute,checked){
             else {
                 year = 20 + year;
             };
+            //update current year
+            currentYear = year;
+            console.log(year);
             //get values of attribute
             var attValue = Number(props[attribute]);
-            var newAttValue = "$" + attValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            //create popup content string
+            var newAttValue = "$" + addCommas(attValue);
             var popupContent = "<p><b>City:</b> " + props.MSA_Codebook + "</p>";
             //update panel content as well
             var panelContent = "<p><b>City:</b>" + props.MSA_Codebook + "</p>" + "<p>HUD Median Income in " + year + ":</b> " + newAttValue + "</p>";
@@ -246,15 +257,22 @@ function updatePropSymbols(map, attribute,checked){
                     this.closePopup();
                 },
                 click: function(){
-                    $("#subpanel").html(panelContent);
+                    $("#cityinfo").html(panelContent);
+                    $("#cityinfo").show();
                 }
             });
         };
     });
+    //update panel with yearly mean
+    $('#year').html(currentYear);
+    $('#median').html(addCommas(yearMedian));
 };
 
 //create sequence controls 
-function createControls(response, map, attributes){  
+function createControls(response, map, attributes){
+    
+    //hide mean info by default
+    $('medianinfo').hide();
     //create skip button
     $('#bottompanel').append('<button class="skip" id="reverse">Reverse</button>');
     //add label
@@ -263,9 +281,9 @@ function createControls(response, map, attributes){
     $('#bottompanel').append('<input class="range-slider" type="range">');
     //set slider attibutes
     $('.range-slider').attr({
-        max: Object.keys(response.features[0].properties).length-1,
-        min: 1,
-        value: 1,
+        max: 12,
+        min: 0,
+        value: 0,
         step: 1,
     });
     //add skip buttons
@@ -275,13 +293,13 @@ function createControls(response, map, attributes){
     $('#reverse').html('<img src="img/reverse.png">');
     $('#forward').html('<img src="img/forward.png">');
     //create check box for resymbolization
-    $('#cboxpanel').append('<label><input type="checkbox" id="cbox" value="resymbolize"><h7>Identify cities below/above year&#39;s national average</h7></input></label><br>');
+    $('#cboxpanel').append('<label><input type="checkbox" id="cbox" value="resymbolize"><h7>Identify cities below/above year&#39;s national median</h7></input></label><br>');
     //by default hide the legend
     $('#legendabove').hide();
     $('#legendbelow').hide();
     //create the html inside for the legend, hidden first
-    $('#legendabove').html("<h7>Above Nationwide Mean</h7>");
-    $('#legendbelow').html("<h7>Below Nationwide Mean</h7>");
+    $('#legendabove').html("<h7>Above Nationwide Median</h7>");
+    $('#legendbelow').html("<h7>Below Nationwide Median</h7>");
     //click listener for buttons
     $('.skip').click(function(){
         //sequence
@@ -301,10 +319,10 @@ function createControls(response, map, attributes){
         
         //update sliider accordingly
         $('.range-slider').val(index);
-        
+        //hide city info panel on year change
+        $('#cityinfo').hide();
         //update symbols
         updatePropSymbols(map, attributes[index], $('#cbox').prop('checked'));
-        
         //console.log(attributes);
     });
     
@@ -314,6 +332,8 @@ function createControls(response, map, attributes){
         //get new index value from fired event
         var index = $(this).val();
         //console.log(index);
+        //hide city info panel on year change
+        $('#cityinfo').hide();
         //update symbols
         updatePropSymbols(map, attributes[index], $('#cbox').prop('checked'));
     });
@@ -322,13 +342,14 @@ function createControls(response, map, attributes){
     $('#cbox').change(function(){
         var index = $('.range-slider').val();
         updatePropSymbols(map, attributes[index],this.checked);
-        
         //show/hide the legend as needed
         if (this.checked){
+            $('#medianinfo').show();
             $('#legendabove').show();
             $('#legendbelow').show();
         }
         else{
+            $('#medianinfo').hide();
             $('#legendabove').hide();
             $('#legendbelow').hide();
         };
