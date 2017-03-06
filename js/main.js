@@ -6,9 +6,9 @@ function createMap(){
     
     //get mapbox tile layer
     L.tileLayer('http://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
-	maxZoom: 18,
-	attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(mymap);
+	   maxZoom: 18,
+	   attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(mymap);
     //call function getData
     getData(mymap);
 };
@@ -40,6 +40,7 @@ function getData(map){
             var attributes = processData(response);            
             createPropSymbols(response, map, attributes);
             createControls(response, map, attributes);
+            //createLegend(map, attributes);
         }
     });
 };
@@ -132,7 +133,7 @@ function pointToLayer(feature, latlng, attributes){
     //create popup content string
     var popupContent = "<p><b> " + feature.properties.MSA_Codebook + "</b></p>";
     //add panel content variable 
-    var panelContent = "<p><b>City:</b>" + feature.properties.MSA_Codebook + "</p>" + "<p>Median Income in " + year + ":</b> " + newAttValue + "</p>";
+    var panelContent = "<p><b>City: </b>" + feature.properties.MSA_Codebook + "</p>" + "<p>Median Income in " + year + ":</b> " + newAttValue + "</p>";
     //add text and year and value to panelcontent
     //bind the popup content to the layer and add an offset radius option
     layer.bindPopup(popupContent, {
@@ -172,11 +173,7 @@ function updatePropSymbols(map, attribute,checked){
     //get the median value of that year by calcMedian function
     var yearMedian = calcMedian(map, attribute);
     //round the median to clean it up
-    console.log(yearMedian)
     yearMedian = Math.round(yearMedian);
-    //checking
-    console.log(yearMedian);
-    console.log(checked);
     //go through each feature's values for given year (attribute)
     map.eachLayer(function(layer){
         if (layer.feature && layer.feature.properties[attribute]){
@@ -266,65 +263,76 @@ function updatePropSymbols(map, attribute,checked){
     //update panel with yearly median
     $('#year').html(currentYear);
     $('#median').html(addCommas(yearMedian));
+    //$('.legend-control-container').append("<p>" + currentYear + " Median Incomes</p>")
 };
+
+//create legend function
+/*function createLegend(map, attributes){
+    var LegendControl = L.Control.extend({
+        options: {
+            position: 'bottom left'
+        },
+        
+        onAdd: function (map) {
+            //create the control container with a particular class name
+            var container = L.DomUtil.create('div', 'legend-control-container');
+            
+            //put legend stuff here
+            
+            $(container).on('mousedown dblclick', function(e){
+                L.DomEvent.stopPropagation(e); 
+            });
+
+            
+            
+            return container;
+        }
+    });
+    
+    map.addControl(new LegendControl());
+};
+*/
 
 //create sequence controls 
 function createControls(response, map, attributes){
-    
+           
     //hide median info by default
     $('#medianinfo').hide();
-    //create skip button
-    $('#bottompanel').append('<button class="skip" id="reverse">Reverse</button>');
-    //add label
-    $('#bottompanel').append('<label for:"range-slider">Year:</label>');
-    //create range input slider element
-    $('#bottompanel').append('<input class="range-slider" type="range">');
-    //set slider attibutes
-    $('.range-slider').attr({
-        max: 12,
-        min: 0,
-        value: 0,
-        step: 1,
-    });
-    //add skip buttons
-    $('#bottompanel').append('<button class="skip" id="forward">Skip</button>');
-    
-    //replce button content with images of arrows
-    $('#reverse').html('<img src="img/reverse.png">');
-    $('#forward').html('<img src="img/forward.png">');
     //create check box for resymbolization
     $('#cboxpanel').append('<label><input type="checkbox" id="cbox" value="resymbolize"><h7>Identify cities below/above year&#39;s national median</h7></input></label><br>');
     //by default hide the legend
     $('#legendabove').hide();
     $('#legendbelow').hide();
     //create the html inside for the legend, hidden first
-    $('#legendabove').html("<h7>Above Nationwide Median</h7>");
-    $('#legendbelow').html("<h7>Below Nationwide Median</h7>");
-    //click listener for buttons
-    $('.skip').click(function(){
-        //sequence
-        //get old index value
-        var index = $('.range-slider').val();
+    $('#legendabove').append("Above Nationwide Median");
+    $('#legendbelow').append("Below Nationwide Median");
+
+    
+    var SequenceControl = L.Control.extend({
+        options: {
+            position: 'bottomleft'
+        },
         
-        //increment or decrement depending on button clicked
-        if ($(this).attr('id') == 'forward'){
-            index++;
-            //if past the last attribute wrap around to beginning
-            index = index > $('.range-slider').attr('max') ? $('.range-slider').attr('min') : index;
-        } else if ($(this).attr('id') == 'reverse'){
-            index--;
-            //if past the first attribute wrap around to last attribute
-            index = index < $('.range-slider').attr('min') ? $('.range-slider').attr('max') : index;
-        };
-        
-        //update sliider accordingly
-        $('.range-slider').val(index);
-        //hide city info panel on year change
-        $('#cityinfo').hide();
-        //update symbols
-        updatePropSymbols(map, attributes[index], $('#cbox').prop('checked'));
-        //console.log(attributes);
+        onAdd: function (response, map, attributes) {
+            //create the control container div with a particular class name
+            var container = L.DomUtil.create('div','sequence-control-container');
+            //ititialize other DOM elements, add listners etc. here
+     
+            //create skip button
+            $(container).append('<button class="skip" id="reverse"><img src="img/reverse.png"></button>');
+            $(container).append('<button class="skip" id="forward"><img src="img/forward.png"></button>');
+            $(container).append('<input class="range-slider" type="range">');
+            console.log(container);
+            
+            //kill mouse event listeners on the map area sequence area
+            $(container).on('mousedown dblclick', function(e){
+                L.DomEvent.stopPropagation(e); 
+            });
+            
+            return container;   
+        }
     });
+    map.addControl(new SequenceControl());
     
     //input listener for slider
     $('.range-slider').on('input',function(){
@@ -337,8 +345,38 @@ function createControls(response, map, attributes){
         //update symbols
         updatePropSymbols(map, attributes[index], $('#cbox').prop('checked'));
     });
+    //set slider attibutes
+    $('.range-slider').attr({
+        max: 12,
+        min: 0,
+        value: 0,
+        step: 1,
+    });
+    //click listener for buttons
     
-    //listener for checkbox for resymbolization, update symbols when checked or unchecked
+    $('.skip').click(function(){
+        //sequence
+        //get old index value
+        var index = $('.range-slider').val();
+        //increment or decrement depending on button clicked
+        if ($(this).attr('id') == 'forward'){
+            index++;
+            //if past the last attribute wrap around to beginning
+            index = index > $('.range-slider').attr('max') ? $('.range-slider').attr('min') : index;
+        } else if ($(this).attr('id') == 'reverse'){
+            index--;
+            //if past the first attribute wrap around to last attribute
+            index = index < $('.range-slider').attr('min') ? $('.range-slider').attr('max') : index;
+        };
+
+        //update sliider accordingly
+        $('.range-slider').val(index);
+        //hide city info panel on year change
+        $('#cityinfo').hide();
+        //update symbols
+        updatePropSymbols(map, attributes[index], $('#cbox').prop('checked'));
+    });
+      //listener for checkbox for resymbolization, update symbols when checked or unchecked
     $('#cbox').change(function(){
         var index = $('.range-slider').val();
         updatePropSymbols(map, attributes[index],this.checked);
@@ -353,7 +391,9 @@ function createControls(response, map, attributes){
             $('#legendabove').hide();
             $('#legendbelow').hide();
         };
-    });    
+    });  
+    
+    
     
 };
 
