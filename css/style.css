@@ -34,7 +34,7 @@
     border-radius: 5px;
     box-sizing: border-box;
     text-align: center;
-    line-height: 20px;
+    line-height: 25px;
 }
 
 .range-slider {
@@ -67,11 +67,11 @@ h7 {
 }
 
 #legendabove{
-    font-size: 10pt;
+    font-size: 11pt;
     background-color: #af8dc3;
 }
 
 #legendbelow{
-    font-size: 10pt;
+    font-size: 11pt;
     background-color: #7fbf7b;
 }
