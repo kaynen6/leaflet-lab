@@ -2,7 +2,7 @@ var currentYear;
 
 //function to call once doc is loaded to create the basemap
 function createMap(){
-    var mymap = L.map('mapid').setView([35, -110], 4);
+    var mymap = L.map('mapid').setView([35, -95], 4);
     
     //get mapbox tile layer
     L.tileLayer('http://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
@@ -39,8 +39,9 @@ function getData(map){
             //create an attributes array
             var attributes = processData(response);            
             createPropSymbols(response, map, attributes);
+            createLegend(map, attributes);
             createControls(response, map, attributes);
-            //createLegend(map, attributes);
+            
         }
     });
 };
@@ -180,6 +181,11 @@ function updatePropSymbols(map, attribute,checked){
             var props = layer.feature.properties;
             //check the checkbox for resymbolization if checked, resybolize with these options
             if (checked){
+                $('#medianinfo').show();
+                $('#median').show();
+                $('#yearinfo').hide();
+                $('#legendabove').show();
+                $('#legendbelow').show();
                 //compare value for feature to the median for that year, use options accordingly
                 if ((props[attribute]) < yearMedian) {
                     //options for less than median
@@ -206,6 +212,12 @@ function updatePropSymbols(map, attribute,checked){
             }
             //if not checked, be use regular symbolization
             else{
+                $('#medianinfo').hide();
+                $('#yearinfo').show();
+                $('#year').show();
+                $('#median').hide();
+                $('#legendabove').hide();
+                $('#legendbelow').hide();
                 var options = {
                     radius: 8,
                     fillColor: "#91bfdb",
@@ -233,7 +245,6 @@ function updatePropSymbols(map, attribute,checked){
             };
             //update current year
             currentYear = year;
-            console.log(year);
             //get values of attribute
             var attValue = Number(props[attribute]);
             var newAttValue = "$" + addCommas(attValue);
@@ -261,21 +272,22 @@ function updatePropSymbols(map, attribute,checked){
         };
     });
     //update panel with yearly median
-    $('#year').html(currentYear);
+    $('#year').html(currentYear + ": ");
     $('#median').html(addCommas(yearMedian));
-    //$('.legend-control-container').append("<p>" + currentYear + " Median Incomes</p>")
 };
 
 //create legend function
-/*function createLegend(map, attributes){
+function createLegend(map, attributes){
     var LegendControl = L.Control.extend({
         options: {
-            position: 'bottom left'
+            position: 'bottomright'
         },
         
         onAdd: function (map) {
             //create the control container with a particular class name
             var container = L.DomUtil.create('div', 'legend-control-container');
+            
+            $(container).append('<div id="panel"><h7><div id="cityinfo"></div><span id="generic"><span id="yearinfo">Incomes for </span><span id="medianinfo">Nationwide Median Income for </span><span id="year"></span><span id="median"></span></span><div id="cboxpanel"></div><div id="legendabove"></div><div id="legendbelow"></div></h7></div>');
             
             //put legend stuff here
             
@@ -290,14 +302,18 @@ function updatePropSymbols(map, attribute,checked){
     });
     
     map.addControl(new LegendControl());
+    $('#year').html(currentYear);
 };
-*/
+
 
 //create sequence controls 
 function createControls(response, map, attributes){
-           
+     
     //hide median info by default
     $('#medianinfo').hide();
+    $('#median').hide();
+    $('#yearinfo').show();
+    $('#year').show();
     //create check box for resymbolization
     $('#cboxpanel').append('<label><input type="checkbox" id="cbox" value="resymbolize"><h7>Identify cities below/above year&#39;s national median</h7></input></label><br>');
     //by default hide the legend
@@ -380,17 +396,6 @@ function createControls(response, map, attributes){
     $('#cbox').change(function(){
         var index = $('.range-slider').val();
         updatePropSymbols(map, attributes[index],this.checked);
-        //show/hide the legend as needed
-        if (this.checked){
-            $('#medianinfo').show();
-            $('#legendabove').show();
-            $('#legendbelow').show();
-        }
-        else{
-            $('#medianinfo').hide();
-            $('#legendabove').hide();
-            $('#legendbelow').hide();
-        };
     });  
     
     
