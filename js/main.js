@@ -2,7 +2,7 @@ var currentYear;
 
 //function to call once doc is loaded to create the basemap
 function createMap(){
-    var mymap = L.map('mapid').setView([35, -95], 4);
+    var mymap = L.map('mapid').setView([30, -95], 4);
     
     //get mapbox tile layer
     L.tileLayer('http://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
@@ -272,8 +272,8 @@ function updatePropSymbols(map, attribute,checked){
         };
     });
     //update panel with yearly median
-    $('#year').html(currentYear + ": ");
-    $('#median').html(addCommas(yearMedian));
+    $('#year').html(currentYear);
+    $('#median').html(": " + addCommas(yearMedian));
 };
 
 //create legend function
@@ -286,11 +286,23 @@ function createLegend(map, attributes){
         onAdd: function (map) {
             //create the control container with a particular class name
             var container = L.DomUtil.create('div', 'legend-control-container');
-            
+            //add html to the container
             $(container).append('<div id="panel"><h7><div id="cityinfo"></div><span id="generic"><span id="yearinfo">Incomes for </span><span id="medianinfo">Nationwide Median Income for </span><span id="year"></span><span id="median"></span></span><div id="cboxpanel"></div><div id="legendabove"></div><div id="legendbelow"></div></h7></div>');
             
-            //put legend stuff here
+            //add svg circle
+            var svg = '<svg id="legend-marker" width="180px" height="180">'
+            //circle carray
+            var circles = ["max", "mean", "min"];
+            //loop  
+            for (var i=0; i<circles.length; i++){
+                //circle string
+                svg += "<circle class='legend-circle' id=" + circles[i] + 'fill="#92BFDB" fill-opacity="0.5" stroke="#000000" cx="90"/>';
+            };
+            //close svg string
+            svg += "</svg>";
             
+            
+            //disable the listeners for mouse action and whatnot
             $(container).on('mousedown dblclick', function(e){
                 L.DomEvent.stopPropagation(e); 
             });
@@ -397,9 +409,6 @@ function createControls(response, map, attributes){
         var index = $('.range-slider').val();
         updatePropSymbols(map, attributes[index],this.checked);
     });  
-    
-    
-    
 };
 
 //start calling functions after document is done loading

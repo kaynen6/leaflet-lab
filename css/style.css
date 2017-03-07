@@ -1,7 +1,7 @@
 /* Stylesheet by Kayne Neigherbauer, 2017 */
 
 #mapid { 
-    height: 500px;
+    height: 600px;
     width: 100%;
     display: inline-block;
     border-radius: 5px;
@@ -9,21 +9,10 @@
     
 }
 
-#bottompanel {
-    width: 79%;
-    background: #C7C7C7;
-    border-radius: 5px;
-    height: auto;
-    text-align: center;
-    line-height: 42px;
-    box-sizing: border-box;
-    
-}
-
 .sequence-control-container {
     width: 400px;
     height: 30px;
-    background-color: rgba(255,255,0.8);
+    background: #C7C7C7;
     padding: 10px;
     line-height: 45px;
     text-align: center;
